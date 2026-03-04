@@ -121,7 +121,7 @@ export default function Home() {
         {/* Sidebar */}
         <div
           className={clsx(
-            "fixed lg:relative z-40 transition-transform duration-300",
+            "fixed top-0 left-0 h-screen lg:relative lg:top-auto lg:left-auto lg:h-auto z-40 transition-transform duration-300",
             sidebarOpen
               ? "translate-x-0"
               : "-translate-x-full lg:translate-x-0 lg:hidden"
