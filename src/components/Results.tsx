@@ -216,7 +216,7 @@ export default function Results({ result }: Props) {
       <div className="card overflow-hidden">
         <div className="card-header">
           <h3 className="text-sm font-semibold text-gray-700">
-            📊 Monthly: Baseline Actual vs Reporting Actual
+            📊 Monthly: Baseline Actual vs Reporting Predicted
           </h3>
         </div>
         <div className="p-2">
@@ -229,19 +229,19 @@ export default function Results({ result }: Props) {
                 name: "Baseline Actual",
                 marker: { color: "#FF9800" },
                 text: result.monthly_savings.map((r) =>
-                  r.baseline.toLocaleString("en", { maximumFractionDigits: 0 })
+                  (r.baseline ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
                 ),
                 textposition: "outside",
                 textfont: { size: 9 },
               },
               {
                 x: result.monthly_savings.map((r) => r.month),
-                y: result.monthly_savings.map((r) => r.actual),
+                y: result.monthly_savings.map((r) => r.predicted ?? 0),
                 type: "bar",
-                name: "Actual (Reporting)",
+                name: "Predicted (Reporting)",
                 marker: { color: "#E65100" },
                 text: result.monthly_savings.map((r) =>
-                  r.actual.toLocaleString("en", { maximumFractionDigits: 0 })
+                  (r.predicted ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
                 ),
                 textposition: "outside",
                 textfont: { size: 9 },
@@ -275,7 +275,7 @@ export default function Results({ result }: Props) {
           variant="info"
         />
         <MetricCard
-          label="Reporting Total"
+          label="Reporting Predicted"
           value={`${Number(savings.reporting_total_kwh).toLocaleString()} kWh`}
         />
         <MetricCard

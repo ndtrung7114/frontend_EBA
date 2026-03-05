@@ -96,7 +96,7 @@ export interface YoYMonth {
   month: string;
   month_num: number;
   baseline_actual?: number | null;
-  reporting_actual?: number | null;
+  reporting_predicted?: number | null;
   savings_kwh?: number | null;
   savings_pct?: number | null;
 }
@@ -108,7 +108,7 @@ export interface YoYResult {
 
 export interface MonthlySavingsRow {
   month: string;
-  actual: number;
+  predicted: number;
   baseline: number;
   savings: number;
   savings_pct: number;
