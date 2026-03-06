@@ -123,11 +123,11 @@ export interface AnalysisResponse {
   model_info: Record<string, string | number>;
   training: TrainingResult;
   reporting: ReportingResult;
-  baseline: BaselineResult;
+  baseline: BaselineResult | null;
   savings: Record<string, number>;
   formula: FormulaResult;
   drivers: DriverResult;
-  yoy: YoYResult;
+  yoy: YoYResult | null;
   monthly_savings: MonthlySavingsRow[];
   features_used: string[];
 }
@@ -136,8 +136,9 @@ export interface AnalysisRequest {
   meter: string;
   rp_start: string;
   rp_end: string;
-  bl_start: string;
-  bl_end: string;
+  baseline_enabled: boolean;
+  bl_start?: string;
+  bl_end?: string;
   tr_start?: string;
   tr_end?: string;
   training_mode: "all" | "custom" | "sync_baseline";

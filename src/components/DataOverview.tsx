@@ -13,6 +13,7 @@ interface Props {
   blEnd: string;
   trStart: string;
   trEnd: string;
+  baselineEnabled: boolean;
 }
 
 export default function DataOverview({
@@ -23,6 +24,7 @@ export default function DataOverview({
   blEnd,
   trStart,
   trEnd,
+  baselineEnabled,
 }: Props) {
   const dates = meterData.data.map((d) => d.date);
   const values = meterData.data.map((d) => d.daily_kwh);
@@ -121,7 +123,7 @@ export default function DataOverview({
                   fillcolor: "rgba(46,125,50,0.06)",
                   line: { width: 0 },
                 },
-                ...(blStart && blEnd
+                ...(baselineEnabled && blStart && blEnd
                   ? [
                       {
                         type: "rect" as const,
@@ -168,7 +170,7 @@ export default function DataOverview({
       </div>
 
       {/* Period Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`grid grid-cols-1 ${baselineEnabled ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
         <PeriodCard
           title="🧠 Training Period"
           color="blue"
@@ -181,17 +183,19 @@ export default function DataOverview({
               : 0
           }
         />
-        <PeriodCard
-          title="📅 Baseline Period"
-          color="orange"
-          start={blStart}
-          end={blEnd}
-          days={
-            meterData.data.filter(
-              (d) => blStart && blEnd && d.date >= blStart && d.date <= blEnd
-            ).length
-          }
-        />
+        {baselineEnabled && (
+          <PeriodCard
+            title="📅 Baseline Period"
+            color="orange"
+            start={blStart}
+            end={blEnd}
+            days={
+              meterData.data.filter(
+                (d) => blStart && blEnd && d.date >= blStart && d.date <= blEnd
+              ).length
+            }
+          />
+        )}
         <PeriodCard
           title="🎯 Reporting Period"
           color="green"

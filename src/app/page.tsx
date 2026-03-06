@@ -92,19 +92,19 @@ export default function Home() {
   // ── Derive DataOverview period props ──
   const rpStartStr = lastRequest?.rp_start || (meterData ? midpoint(meterData.min_date, meterData.max_date) : "");
   const deriveTrainingEnd = () => {
-    if (lastRequest?.training_mode === "custom" && lastRequest?.tr_end) return lastRequest.tr_end;
-    if (lastRequest?.training_mode === "sync_baseline" && lastRequest?.bl_end) return lastRequest.bl_end;
-    // "all" mode or default: use day before reporting start
+    // Always use day before reporting start
     if (rpStartStr) return oneDayBefore(rpStartStr);
     return meterData?.max_date || "";
   };
+  const baselineEnabled = lastRequest?.baseline_enabled ?? true;
   const overviewProps = {
     rpStart: rpStartStr,
     rpEnd: lastRequest?.rp_end || meterData?.max_date || "",
-    blStart: lastRequest?.bl_start || meterData?.min_date || "",
-    blEnd: lastRequest?.bl_end || (meterData ? midpoint(meterData.min_date, meterData.max_date) : ""),
+    blStart: baselineEnabled ? (lastRequest?.bl_start || meterData?.min_date || "") : "",
+    blEnd: baselineEnabled ? (lastRequest?.bl_end || (meterData ? midpoint(meterData.min_date, meterData.max_date) : "")) : "",
     trStart: lastRequest?.tr_start || meterData?.min_date || "",
     trEnd: deriveTrainingEnd(),
+    baselineEnabled,
   };
 
   return (
@@ -212,6 +212,7 @@ export default function Home() {
                     blEnd={overviewProps.blEnd}
                     trStart={overviewProps.trStart}
                     trEnd={overviewProps.trEnd}
+                    baselineEnabled={overviewProps.baselineEnabled}
                   />
                 )}
 
@@ -255,7 +256,14 @@ export default function Home() {
                     message="Run an analysis with a baseline period enabled to see YoY comparisons."
                   />
                 )}
-                {activeTab === "yoy" && result && (
+                {activeTab === "yoy" && result && !result.yoy && (
+                  <EmptyState
+                    icon="📅"
+                    title="Baseline Disabled"
+                    message="Enable the baseline period in the sidebar and re-run the analysis to see Year-over-Year comparisons."
+                  />
+                )}
+                {activeTab === "yoy" && result && result.yoy && (
                   <YearOverYear result={result} />
                 )}
               </>
