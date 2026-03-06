@@ -251,6 +251,7 @@ export default function YearOverYear({ result }: Props) {
 }
 
 function downloadYoY(result: AnalysisResponse) {
+  if (!result.yoy) return;
   const header = "Month,Baseline Actual (kWh),Reporting Actual (kWh),Savings (kWh),Savings (%)";
   const rows = result.yoy.months
     .filter((m) => m.baseline_actual || m.reporting_actual)
