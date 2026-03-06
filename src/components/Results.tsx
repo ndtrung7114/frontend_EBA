@@ -12,7 +12,10 @@ interface Props {
 
 export default function Results({ result }: Props) {
   const { training, reporting, baseline, savings, model_info } = result;
-  const r2 = (training.metrics.R2 as number) || 0;
+  const r2Train = (training.metrics.R2 as number) || 0;
+  const r2Test = (reporting.metrics.R2 as number) || 0;
+  const cvrmse = (reporting.metrics.CVRMSE_pct as number) || 0;
+  const nmbe = (reporting.metrics.NMBE_pct as number) || 0;
 
   // Timeline data
   const trainDates = training.data.map((d) => d.date);
@@ -25,12 +28,59 @@ export default function Results({ result }: Props) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Key Metrics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="relative group">
+          <MetricCard
+            label="R² (Train)"
+            value={r2Train.toFixed(4)}
+            variant={r2Train > 0.7 ? "success" : r2Train > 0.4 ? "info" : "danger"}
+          />
+          <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
+            <strong>R² (Coefficient of Determination)</strong> on training set.
+            Measures how well the model fits the training data. Range: 0–1, higher is better.
+            &gt;0.7 = good, &gt;0.85 = excellent.
+          </div>
+        </div>
+        <div className="relative group">
+          <MetricCard
+            label="R² (Test)"
+            value={r2Test.toFixed(4)}
+            variant={r2Test > 0.7 ? "success" : r2Test > 0.4 ? "info" : "danger"}
+          />
+          <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
+            <strong>R² (Coefficient of Determination)</strong> on reporting/test set.
+            Shows how well the model generalizes to unseen data. If much lower than train R²,
+            the model may be overfitting.
+          </div>
+        </div>
+        <div className="relative group">
+          <MetricCard
+            label="CVRMSE"
+            value={`${cvrmse.toFixed(2)}%`}
+            variant={cvrmse < 25 ? "success" : cvrmse < 50 ? "info" : "danger"}
+          />
+          <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
+            <strong>CV(RMSE)</strong> — Coefficient of Variation of RMSE.
+            Normalizes RMSE by mean consumption. ASHRAE Guideline 14 recommends &lt;25% for
+            daily data. Lower = more accurate predictions.
+          </div>
+        </div>
+        <div className="relative group">
+          <MetricCard
+            label="NMBE"
+            value={`${nmbe >= 0 ? "+" : ""}${nmbe.toFixed(2)}%`}
+            variant={Math.abs(nmbe) < 10 ? "success" : Math.abs(nmbe) < 20 ? "info" : "danger"}
+          />
+          <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
+            <strong>NMBE</strong> — Normalized Mean Bias Error.
+            Shows systematic over/under-prediction. Positive = model under-predicts.
+            ASHRAE Guideline 14 recommends |NMBE| &lt;10% for daily data.
+          </div>
+        </div>
+      </div>
+
+      {/* Additional Training Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <MetricCard
-          label="R² (Train)"
-          value={r2.toFixed(4)}
-          variant={r2 > 0.7 ? "success" : r2 > 0.4 ? "info" : "danger"}
-        />
         <MetricCard
           label="Training Days"
           value={training.days}
@@ -39,6 +89,10 @@ export default function Results({ result }: Props) {
               ? `-${training.outlier_stats.outliers_removed} outliers`
               : "No IQR"
           }
+        />
+        <MetricCard
+          label="Reporting Days"
+          value={reporting.days}
         />
       </div>
 
@@ -216,7 +270,7 @@ export default function Results({ result }: Props) {
       <div className="card overflow-hidden">
         <div className="card-header">
           <h3 className="text-sm font-semibold text-gray-700">
-            📊 Monthly: Baseline Actual vs Reporting Predicted
+            📊 Monthly: Reporting Actual vs Reporting Predicted
           </h3>
         </div>
         <div className="p-2">
@@ -224,12 +278,12 @@ export default function Results({ result }: Props) {
             data={[
               {
                 x: result.monthly_savings.map((r) => r.month),
-                y: result.monthly_savings.map((r) => r.baseline),
+                y: result.monthly_savings.map((r) => r.actual),
                 type: "bar",
-                name: "Baseline Actual",
-                marker: { color: "#FF9800" },
+                name: "Reporting Actual",
+                marker: { color: "#2E7D32" },
                 text: result.monthly_savings.map((r) =>
-                  (r.baseline ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
+                  (r.actual ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
                 ),
                 textposition: "outside",
                 textfont: { size: 9 },
@@ -238,7 +292,7 @@ export default function Results({ result }: Props) {
                 x: result.monthly_savings.map((r) => r.month),
                 y: result.monthly_savings.map((r) => r.predicted ?? 0),
                 type: "bar",
-                name: "Predicted (Reporting)",
+                name: "Reporting Predicted",
                 marker: { color: "#E65100" },
                 text: result.monthly_savings.map((r) =>
                   (r.predicted ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
@@ -270,13 +324,13 @@ export default function Results({ result }: Props) {
       {/* Savings Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          label="Baseline Total"
-          value={`${Number(savings.baseline_total_kwh).toLocaleString()} kWh`}
+          label="Reporting Actual"
+          value={`${Number(savings.reporting_actual_kwh).toLocaleString()} kWh`}
           variant="info"
         />
         <MetricCard
           label="Reporting Predicted"
-          value={`${Number(savings.reporting_total_kwh).toLocaleString()} kWh`}
+          value={`${Number(savings.reporting_predicted_kwh).toLocaleString()} kWh`}
         />
         <MetricCard
           label="Net Savings"

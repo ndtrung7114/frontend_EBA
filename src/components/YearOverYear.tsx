@@ -22,23 +22,23 @@ export default function YearOverYear({ result }: Props) {
           📅 Year-over-Year Comparison
         </h2>
         <p className="text-sm text-gray-500 mt-1">
-          Baseline Actual vs Reporting Predicted — compares actual baseline energy
-          consumption with model-predicted reporting consumption, matched by calendar month.
+          Baseline Actual vs Reporting Actual — compares actual energy
+          consumption from the baseline period with actual consumption in the reporting period,
+          matched by calendar month.
         </p>
       </div>
 
       {/* Info banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-        💡 <strong>Savings</strong> = Baseline Actual − Reporting Predicted.
-        Positive savings mean the model predicts lower consumption in the reporting period
-        compared to the baseline.
+        💡 <strong>Savings</strong> = Baseline Actual − Reporting Actual.
+        Positive savings mean actual consumption decreased from baseline to reporting period.
       </div>
 
       {/* YoY Bar Chart */}
       <div className="card overflow-hidden">
         <div className="card-header">
           <h3 className="text-sm font-semibold text-gray-700">
-            Year-over-Year: Baseline Actual vs Reporting Predicted
+            Year-over-Year: Baseline Actual vs Reporting Actual
           </h3>
         </div>
         <div className="p-2">
@@ -62,13 +62,13 @@ export default function YearOverYear({ result }: Props) {
               },
               {
                 x: months.map((m) => m.month),
-                y: months.map((m) => m.reporting_predicted ?? 0),
+                y: months.map((m) => m.reporting_actual ?? 0),
                 type: "bar",
-                name: "Reporting Predicted",
+                name: "Reporting Actual",
                 marker: { color: "#2E7D32" },
                 text: months.map((m) =>
-                  m.reporting_predicted
-                    ? m.reporting_predicted.toLocaleString("en", {
+                  m.reporting_actual
+                    ? m.reporting_actual.toLocaleString("en", {
                         maximumFractionDigits: 0,
                       })
                     : ""
@@ -127,7 +127,7 @@ export default function YearOverYear({ result }: Props) {
             </thead>
             <tbody>
               {months.map((m, i) => {
-                const hasData = m.baseline_actual || m.reporting_predicted;
+                const hasData = m.baseline_actual || m.reporting_actual;
                 if (!hasData) return null;
                 return (
                   <tr
@@ -141,7 +141,7 @@ export default function YearOverYear({ result }: Props) {
                       {m.baseline_actual?.toLocaleString() ?? "—"}
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-gray-700">
-                      {m.reporting_predicted?.toLocaleString() ?? "—"}
+                      {m.reporting_actual?.toLocaleString() ?? "—"}
                     </td>
                     <td className="px-3 py-2 text-right font-mono">
                       <span
@@ -185,8 +185,8 @@ export default function YearOverYear({ result }: Props) {
           variant="info"
         />
         <MetricCard
-          label="Reporting Predicted"
-          value={`${Number(totals.reporting_predicted).toLocaleString()} kWh`}
+          label="Reporting Actual"
+          value={`${Number(totals.reporting_actual).toLocaleString()} kWh`}
         />
         <MetricCard
           label="Savings"
@@ -225,10 +225,10 @@ export default function YearOverYear({ result }: Props) {
             <strong>Baseline Actual</strong> = Historical consumption in the baseline period
           </li>
           <li>
-            <strong>Reporting Predicted</strong> = Model-predicted consumption in the reporting period
+            <strong>Reporting Actual</strong> = Actual consumption in the reporting period
           </li>
           <li>
-            <strong>Savings</strong> = Baseline Actual − Reporting Predicted (positive = energy saved)
+            <strong>Savings</strong> = Baseline Actual − Reporting Actual (positive = energy saved)
           </li>
           <li>
             Months are matched by calendar month number for direct comparison
@@ -250,12 +250,12 @@ export default function YearOverYear({ result }: Props) {
 }
 
 function downloadYoY(result: AnalysisResponse) {
-  const header = "Month,Baseline Actual (kWh),Reporting Predicted (kWh),Savings (kWh),Savings (%)";
+  const header = "Month,Baseline Actual (kWh),Reporting Actual (kWh),Savings (kWh),Savings (%)";
   const rows = result.yoy.months
-    .filter((m) => m.baseline_actual || m.reporting_predicted)
+    .filter((m) => m.baseline_actual || m.reporting_actual)
     .map(
       (m) =>
-        `${m.month},${m.baseline_actual ?? ""},${m.reporting_predicted ?? ""},${m.savings_kwh ?? ""},${m.savings_pct ?? ""}`
+        `${m.month},${m.baseline_actual ?? ""},${m.reporting_actual ?? ""},${m.savings_kwh ?? ""},${m.savings_pct ?? ""}`
     );
   const csv = [header, ...rows].join("\n");
   const blob = new Blob([csv], { type: "text/csv" });

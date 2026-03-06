@@ -14,10 +14,11 @@ import {
   MapPin,
 } from "lucide-react";
 import type { MeterInfo, MeterDataResponse, AnalysisRequest } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 interface Props {
   meters: MeterInfo[];
+  groups: string[];
   selectedMeter: string;
   meterData: MeterDataResponse | null;
   onMeterChange: (meter: string) => void;
@@ -27,6 +28,7 @@ interface Props {
 
 export default function Sidebar({
   meters,
+  groups,
   selectedMeter,
   meterData,
   onMeterChange,
@@ -34,6 +36,20 @@ export default function Sidebar({
   loading,
 }: Props) {
   const info = meters.find((m) => m.meter === selectedMeter);
+
+  // Group filter
+  const [selectedGroup, setSelectedGroup] = useState<string>("all");
+  const filteredMeters = useMemo(() => {
+    if (selectedGroup === "all") return meters;
+    return meters.filter((m) => m.group === selectedGroup);
+  }, [meters, selectedGroup]);
+
+  // When group changes, select first meter in filtered list
+  useEffect(() => {
+    if (filteredMeters.length > 0 && !filteredMeters.find(m => m.meter === selectedMeter)) {
+      onMeterChange(filteredMeters[0].meter);
+    }
+  }, [filteredMeters, selectedMeter, onMeterChange]);
 
   // Dates
   const minDate = meterData?.min_date || "";
@@ -107,14 +123,30 @@ export default function Sidebar({
           <h2 className="text-sm font-bold uppercase tracking-wider">Configuration</h2>
         </div>
 
+        {/* Data Group Selection */}
+        <Section icon={<Building2 className="w-4 h-4" />} title="Data Group">
+          <select
+            value={selectedGroup}
+            onChange={(e) => setSelectedGroup(e.target.value)}
+            className="select-field mb-2"
+          >
+            <option value="all">All Groups ({meters.length})</option>
+            {groups.map((g) => (
+              <option key={g} value={g}>
+                {g} ({meters.filter((m) => m.group === g).length})
+              </option>
+            ))}
+          </select>
+        </Section>
+
         {/* Meter Selection */}
-        <Section icon={<Building2 className="w-4 h-4" />} title="Meter">
+        <Section icon={<MapPin className="w-4 h-4" />} title="Meter">
           <select
             value={selectedMeter}
             onChange={(e) => onMeterChange(e.target.value)}
             className="select-field"
           >
-            {meters.map((m) => (
+            {filteredMeters.map((m) => (
               <option key={m.meter} value={m.meter}>
                 {m.meter} ({m.site} / {m.building_type})
               </option>

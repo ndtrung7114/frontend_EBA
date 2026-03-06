@@ -4,19 +4,19 @@
 
 export interface MeterInfo {
   meter: string;
+  group: string;
   site: string;
   building_type: string;
-  lat?: number;
-  lng?: number;
-  timezone?: string;
   total_days: number;
-  train_days: number;
-  test_days: number;
+  min_date: string;
+  max_date: string;
+  avg_daily_kwh: number;
 }
 
 export interface MeterListResponse {
   meters: MeterInfo[];
   total: number;
+  groups: string[];
 }
 
 export interface MeterDataPoint {
@@ -26,6 +26,7 @@ export interface MeterDataPoint {
 
 export interface MeterDataResponse {
   meter: string;
+  group: string;
   site: string;
   building_type: string;
   min_date: string;
@@ -96,7 +97,7 @@ export interface YoYMonth {
   month: string;
   month_num: number;
   baseline_actual?: number | null;
-  reporting_predicted?: number | null;
+  reporting_actual?: number | null;
   savings_kwh?: number | null;
   savings_pct?: number | null;
 }
@@ -108,14 +109,15 @@ export interface YoYResult {
 
 export interface MonthlySavingsRow {
   month: string;
-  predicted: number;
-  baseline: number;
-  savings: number;
+  actual: number;      // actual usage from DB in reporting period
+  predicted: number;   // model-predicted (normalized) usage
+  savings: number;     // actual - predicted
   savings_pct: number;
 }
 
 export interface AnalysisResponse {
   meter: string;
+  group: string;
   site: string;
   building_type: string;
   model_info: Record<string, string | number>;

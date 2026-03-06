@@ -39,6 +39,7 @@ const TAB_ICONS: Record<TabId, React.ReactNode> = {
 export default function Home() {
   // ── State ──
   const [meters, setMeters] = useState<MeterInfo[]>([]);
+  const [groups, setGroups] = useState<string[]>([]);
   const [selectedMeter, setSelectedMeter] = useState("");
   const [meterData, setMeterData] = useState<MeterDataResponse | null>(null);
   const [result, setResult] = useState<AnalysisResponse | null>(null);
@@ -55,6 +56,7 @@ export default function Home() {
     fetchMeters()
       .then((res) => {
         setMeters(res.meters);
+        setGroups(res.groups || []);
         if (res.meters.length > 0) {
           setSelectedMeter(res.meters[0].meter);
         }
@@ -129,6 +131,7 @@ export default function Home() {
         >
           <Sidebar
             meters={meters}
+            groups={groups}
             selectedMeter={selectedMeter}
             meterData={meterData}
             onMeterChange={setSelectedMeter}
