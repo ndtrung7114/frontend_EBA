@@ -12,6 +12,7 @@ interface Props {
 
 export default function YearOverYear({ result }: Props) {
   const { yoy } = result;
+  if (!yoy) return null;
   const months = yoy.months;
   const totals = yoy.totals;
 
