@@ -322,7 +322,7 @@ export default function Results({ result }: Props) {
       </div>
 
       {/* Savings Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <MetricCard
           label="Reporting Actual"
           value={`${Number(savings.reporting_actual_kwh).toLocaleString()} kWh`}
@@ -331,20 +331,6 @@ export default function Results({ result }: Props) {
         <MetricCard
           label="Reporting Predicted"
           value={`${Number(savings.reporting_predicted_kwh).toLocaleString()} kWh`}
-        />
-        <MetricCard
-          label="Net Savings"
-          value={`${Number(savings.total_savings_kwh) >= 0 ? "+" : ""}${Number(
-            savings.total_savings_kwh
-          ).toLocaleString()} kWh`}
-          variant={Number(savings.total_savings_kwh) > 0 ? "success" : "danger"}
-        />
-        <MetricCard
-          label="Savings %"
-          value={`${Number(savings.savings_pct) >= 0 ? "+" : ""}${Number(
-            savings.savings_pct
-          ).toFixed(1)}%`}
-          variant={Number(savings.savings_pct) > 0 ? "success" : "danger"}
         />
       </div>
 
