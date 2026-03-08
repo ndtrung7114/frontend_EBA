@@ -10,11 +10,15 @@ interface Props {
 }
 
 export default function Formula({ result }: Props) {
-  const { formula } = result;
+  const { formula, features_used } = result;
   const coefEntries = Object.entries(formula.coefficients).filter(
     ([, v]) => Math.abs(v) > 1e-8
   );
   const sortedByAbs = [...coefEntries].sort((a, b) => Math.abs(a[1]) - Math.abs(b[1]));
+
+  // Features removed by ElasticNet (zero coefficient)
+  const keptFeatures = new Set(coefEntries.map(([f]) => f));
+  const removedFeatures = features_used.filter((f) => !keptFeatures.has(f));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -120,6 +124,32 @@ export default function Formula({ result }: Props) {
           />
         </div>
       </div>
+
+      {/* Removed Features */}
+      {removedFeatures.length > 0 && (
+        <div className="card overflow-hidden">
+          <div className="card-header bg-amber-50 border-b border-amber-100">
+            <h3 className="text-sm font-semibold text-amber-700">
+              ✂️ Features Removed by ElasticNet ({removedFeatures.length} of {features_used.length})
+            </h3>
+          </div>
+          <div className="p-4">
+            <p className="text-xs text-gray-500 mb-3">
+              These features were shrunk to zero coefficient by the ElasticNet regularization — they had no predictive value for this meter and were excluded from the model.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {removedFeatures.map((f) => (
+                <span
+                  key={f}
+                  className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200"
+                >
+                  {f}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Coefficient Interpretation Table */}
       <div className="card overflow-hidden">
