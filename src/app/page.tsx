@@ -92,7 +92,9 @@ export default function Home() {
   // ── Derive DataOverview period props ──
   const rpStartStr = lastRequest?.rp_start || (meterData ? midpoint(meterData.min_date, meterData.max_date) : "");
   const deriveTrainingEnd = () => {
-    // Always use day before reporting start
+    if (lastRequest?.training_mode === "custom" && lastRequest?.tr_end) return lastRequest.tr_end;
+    if (lastRequest?.training_mode === "sync_baseline" && lastRequest?.bl_end) return lastRequest.bl_end;
+    // "all" mode or default: use day before reporting start
     if (rpStartStr) return oneDayBefore(rpStartStr);
     return meterData?.max_date || "";
   };
@@ -102,7 +104,11 @@ export default function Home() {
     rpEnd: lastRequest?.rp_end || meterData?.max_date || "",
     blStart: baselineEnabled ? (lastRequest?.bl_start || meterData?.min_date || "") : "",
     blEnd: baselineEnabled ? (lastRequest?.bl_end || (meterData ? midpoint(meterData.min_date, meterData.max_date) : "")) : "",
-    trStart: lastRequest?.tr_start || meterData?.min_date || "",
+    trStart: lastRequest?.training_mode === "custom"
+      ? (lastRequest?.tr_start || meterData?.min_date || "")
+      : lastRequest?.training_mode === "sync_baseline"
+      ? (lastRequest?.bl_start || meterData?.min_date || "")
+      : meterData?.min_date || "",
     trEnd: deriveTrainingEnd(),
     baselineEnabled,
   };

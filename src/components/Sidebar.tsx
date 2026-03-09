@@ -1,9 +1,11 @@
 "use client";
 
+import { clsx } from "clsx";
 import {
   Settings,
   Calendar,
   Target,
+  Brain,
   Wrench,
   Play,
   ChevronDown,
@@ -62,8 +64,12 @@ export default function Sidebar({
   const [baselineEnabled, setBaselineEnabled] = useState(true);
   const [blStart, setBlStart] = useState(minDate);
   const [blEnd, setBlEnd] = useState(midDate);
+  const [trainingMode, setTrainingMode] = useState<"all" | "custom" | "sync_baseline">("all");
+  const [trStart, setTrStart] = useState(minDate);
+  const [trEnd, setTrEnd] = useState(maxDate);
   const [useIqr, setUseIqr] = useState(true);
   const [iqrK, setIqrK] = useState(1.5);
+  const allHistoryEnd = rpStart ? oneDayBefore(rpStart) : "";
 
   // Feature selection
   const [showFeatures, setShowFeatures] = useState(false);
@@ -78,6 +84,8 @@ export default function Sidebar({
       setRpEnd(meterData.max_date);
       setBlStart(meterData.min_date);
       setBlEnd(mid);
+      setTrStart(meterData.min_date);
+      setTrEnd(meterData.max_date);
       setSelectedFeatures(meterData.features);
     }
   }, [meterData]);
@@ -88,7 +96,7 @@ export default function Sidebar({
       rp_start: rpStart,
       rp_end: rpEnd,
       baseline_enabled: baselineEnabled,
-      training_mode: "all",
+      training_mode: trainingMode,
       features: selectedFeatures.length === allFeatures.length ? undefined : selectedFeatures,
       use_iqr: useIqr,
       iqr_k: iqrK,
@@ -96,6 +104,10 @@ export default function Sidebar({
     if (baselineEnabled) {
       req.bl_start = blStart;
       req.bl_end = blEnd;
+    }
+    if (trainingMode === "custom") {
+      req.tr_start = trStart;
+      req.tr_end = trEnd;
     }
     onRun(req);
   };
@@ -263,6 +275,78 @@ export default function Sidebar({
                 </div>
               </div>
             </>
+          )}
+        </Section>
+
+        {/* Training Period */}
+        <Section icon={<Brain className="w-4 h-4 text-blue-600" />} title="Training Period">
+          <p className="text-[11px] text-gray-500 mb-2">
+            Data the model learns from
+          </p>
+          <div className="space-y-1.5">
+            {(["all", "custom", "sync_baseline"] as const).map((mode) => (
+              <label
+                key={mode}
+                className={clsx(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer border transition",
+                  trainingMode === mode
+                    ? "border-brand-300 bg-brand-50"
+                    : "border-transparent hover:bg-gray-50"
+                )}
+              >
+                <input
+                  type="radio"
+                  name="training_mode"
+                  value={mode}
+                  checked={trainingMode === mode}
+                  onChange={() => setTrainingMode(mode)}
+                  className="text-brand-600 focus:ring-brand-500"
+                />
+                <span className="text-xs text-gray-700">
+                  {mode === "all"
+                    ? "All History"
+                    : mode === "custom"
+                    ? "Custom Range"
+                    : "Sync with Baseline"}
+                </span>
+              </label>
+            ))}
+          </div>
+          {trainingMode === "custom" && (
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div>
+                <label className="label">Start</label>
+                <input
+                  type="date"
+                  value={trStart}
+                  min={minDate}
+                  max={maxDate}
+                  onChange={(e) => setTrStart(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="label">End</label>
+                <input
+                  type="date"
+                  value={trEnd}
+                  min={minDate}
+                  max={maxDate}
+                  onChange={(e) => setTrEnd(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+            </div>
+          )}
+          {trainingMode === "all" && (
+            <p className="text-[11px] text-gray-400 mt-1.5">
+              Using all data before reporting start: {minDate} → {allHistoryEnd || "N/A"}
+            </p>
+          )}
+          {trainingMode === "sync_baseline" && (
+            <p className="text-[11px] text-gray-400 mt-1.5">
+              Synced: {blStart} → {blEnd}
+            </p>
           )}
         </Section>
 
