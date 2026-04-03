@@ -45,12 +45,13 @@ export default function Results({ result }: Props) {
           predicted: Math.round(v.predicted),
         }));
     }
-    // month (default)
-    return result.monthly_savings.map((r) => ({
-      label: r.month,
-      actual: r.actual,
-      predicted: r.predicted ?? 0,
-    }));
+    // month (default) — month is "YYYY-MM", format to "Nov 2024"
+    const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return result.monthly_savings.map((r) => {
+      const [year, mon] = r.month.split("-");
+      const label = `${MONTHS[parseInt(mon) - 1]} ${year}`;
+      return { label, actual: r.actual, predicted: r.predicted ?? 0 };
+    });
   })();
 
   // Timeline data
