@@ -145,6 +145,7 @@ export interface AnalysisRequest {
   features?: string[];
   use_iqr: boolean;
   iqr_k: number;
+  use_interpolated?: boolean;
 }
 
 // ── UI State Types ──

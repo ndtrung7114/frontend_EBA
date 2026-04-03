@@ -69,6 +69,8 @@ export default function Sidebar({
   const [trEnd, setTrEnd] = useState(maxDate);
   const [useIqr, setUseIqr] = useState(true);
   const [iqrK, setIqrK] = useState(1.5);
+  const [useInterpolated, setUseInterpolated] = useState(false);
+  const hasInterpolated = info?.group === "IKEA";
   const allHistoryEnd = rpStart ? oneDayBefore(rpStart) : "";
 
   // Feature selection
@@ -100,6 +102,7 @@ export default function Sidebar({
       features: selectedFeatures.length === allFeatures.length ? undefined : selectedFeatures,
       use_iqr: useIqr,
       iqr_k: iqrK,
+      use_interpolated: hasInterpolated ? useInterpolated : undefined,
     };
     if (baselineEnabled) {
       req.bl_start = blStart;
@@ -383,6 +386,26 @@ export default function Sidebar({
             </div>
           )}
         </Section>
+
+        {/* Interpolated Value — only for meters that have this column (IKEA) */}
+        {hasInterpolated && (
+          <Section icon={<Wrench className="w-4 h-4 text-purple-500" />} title="Usage Source">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useInterpolated}
+                onChange={(e) => setUseInterpolated(e.target.checked)}
+                className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+              />
+              <span className="text-xs text-gray-700">Use interpolated value</span>
+            </label>
+            <p className="text-[11px] text-gray-400 mt-1">
+              {useInterpolated
+                ? "Model trains on interpolated_value (gap-filled readings)"
+                : "Model trains on raw usage_value"}
+            </p>
+          </Section>
+        )}
 
       </div>
 
