@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import MetricCard from "./MetricCard";
 import type { AnalysisResponse } from "@/lib/types";
@@ -16,6 +17,41 @@ export default function Results({ result }: Props) {
   const r2Test = (reporting.metrics.R2 as number) || 0;
   const cvrmse = (reporting.metrics.CVRMSE_pct as number) || 0;
   const nmbe = (reporting.metrics.NMBE_pct as number) || 0;
+
+  // Savings chart view mode
+  const [savingsView, setSavingsView] = useState<"day" | "month" | "year">("month");
+
+  const savingsChartData = (() => {
+    if (savingsView === "day") {
+      return reporting.data.map((d) => ({
+        label: d.date,
+        actual: d.actual,
+        predicted: d.predicted,
+      }));
+    }
+    if (savingsView === "year") {
+      const groups: Record<string, { actual: number; predicted: number }> = {};
+      for (const d of reporting.data) {
+        const year = d.date.slice(0, 4);
+        if (!groups[year]) groups[year] = { actual: 0, predicted: 0 };
+        groups[year].actual += d.actual;
+        groups[year].predicted += d.predicted;
+      }
+      return Object.entries(groups)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([year, v]) => ({
+          label: year,
+          actual: Math.round(v.actual),
+          predicted: Math.round(v.predicted),
+        }));
+    }
+    // month (default)
+    return result.monthly_savings.map((r) => ({
+      label: r.month,
+      actual: r.actual,
+      predicted: r.predicted ?? 0,
+    }));
+  })();
 
   // Timeline data
   const trainDates = training.data.map((d) => d.date);
@@ -266,36 +302,51 @@ export default function Results({ result }: Props) {
         </div>
       </div>
 
-      {/* Monthly Savings Bar */}
+      {/* Savings Bar Chart with view toggle */}
       <div className="card overflow-hidden">
-        <div className="card-header">
+        <div className="card-header flex items-center justify-between">
           <h3 className="text-sm font-semibold text-gray-700">
-            📊 Monthly: Reporting Actual vs Reporting Predicted
+            📊 Reporting Actual vs Reporting Predicted
           </h3>
+          <div className="flex rounded-md border border-gray-200 overflow-hidden text-xs">
+            {(["day", "month", "year"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setSavingsView(v)}
+                className={`px-3 py-1 capitalize ${
+                  savingsView === v
+                    ? "bg-blue-600 text-white font-semibold"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
         <div className="p-2">
           <Plot
             data={[
               {
-                x: result.monthly_savings.map((r) => r.month),
-                y: result.monthly_savings.map((r) => r.actual),
+                x: savingsChartData.map((r) => r.label),
+                y: savingsChartData.map((r) => r.actual),
                 type: "bar",
                 name: "Reporting Actual",
                 marker: { color: "#2E7D32" },
-                text: result.monthly_savings.map((r) =>
-                  (r.actual ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
+                text: savingsChartData.map((r) =>
+                  r.actual.toLocaleString("en", { maximumFractionDigits: 0 })
                 ),
                 textposition: "outside",
                 textfont: { size: 9 },
               },
               {
-                x: result.monthly_savings.map((r) => r.month),
-                y: result.monthly_savings.map((r) => r.predicted ?? 0),
+                x: savingsChartData.map((r) => r.label),
+                y: savingsChartData.map((r) => r.predicted),
                 type: "bar",
                 name: "Reporting Predicted",
                 marker: { color: "#E65100" },
-                text: result.monthly_savings.map((r) =>
-                  (r.predicted ?? 0).toLocaleString("en", { maximumFractionDigits: 0 })
+                text: savingsChartData.map((r) =>
+                  r.predicted.toLocaleString("en", { maximumFractionDigits: 0 })
                 ),
                 textposition: "outside",
                 textfont: { size: 9 },
@@ -304,8 +355,11 @@ export default function Results({ result }: Props) {
             layout={{
               barmode: "group",
               height: 420,
-              margin: { l: 60, r: 20, t: 30, b: 40 },
-              xaxis: { title: { text: "Month" } },
+              margin: { l: 60, r: 20, t: 30, b: savingsView === "day" ? 60 : 40 },
+              xaxis: {
+                title: { text: savingsView === "day" ? "Date" : savingsView === "year" ? "Year" : "Month" },
+                tickangle: savingsView === "day" ? -45 : 0,
+              },
               yaxis: { title: { text: "Total kWh" } },
               legend: {
                 orientation: "h",
