@@ -14,7 +14,6 @@ interface Props {
 export default function Results({ result }: Props) {
   const { training, reporting, baseline, savings, model_info } = result;
   const r2Train = (training.metrics.R2 as number) || 0;
-  const r2Test = (reporting.metrics.R2 as number) || 0;
   const cvrmse = (reporting.metrics.CVRMSE_pct as number) || 0;
   const nmbe = (reporting.metrics.NMBE_pct as number) || 0;
 
@@ -65,7 +64,7 @@ export default function Results({ result }: Props) {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="relative group">
           <MetricCard
             label="R² (Train)"
@@ -80,25 +79,13 @@ export default function Results({ result }: Props) {
         </div>
         <div className="relative group">
           <MetricCard
-            label="R² (Test)"
-            value={r2Test.toFixed(4)}
-            variant={r2Test > 0.7 ? "success" : r2Test > 0.4 ? "info" : "danger"}
-          />
-          <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
-            <strong>R² (Coefficient of Determination)</strong> on reporting/test set.
-            Shows how well the model generalizes to unseen data. If much lower than train R²,
-            the model may be overfitting.
-          </div>
-        </div>
-        <div className="relative group">
-          <MetricCard
             label="CVRMSE"
             value={`${cvrmse.toFixed(2)}%`}
             variant={cvrmse < 25 ? "success" : cvrmse < 50 ? "info" : "danger"}
           />
           <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
             <strong>CV(RMSE)</strong> — Coefficient of Variation of RMSE.
-            Normalizes RMSE by mean consumption. ASHRAE Guideline 14 recommends &lt;25% for
+            Evaluated on the reporting period. ASHRAE Guideline 14 recommends &lt;25% for
             daily data. Lower = more accurate predictions.
           </div>
         </div>
@@ -110,7 +97,7 @@ export default function Results({ result }: Props) {
           />
           <div className="hidden group-hover:block absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg">
             <strong>NMBE</strong> — Normalized Mean Bias Error.
-            Shows systematic over/under-prediction. Positive = model under-predicts.
+            Evaluated on the reporting period. Positive = model under-predicts.
             ASHRAE Guideline 14 recommends |NMBE| &lt;10% for daily data.
           </div>
         </div>
@@ -208,6 +195,8 @@ export default function Results({ result }: Props) {
               height: 420,
               margin: { l: 60, r: 20, t: 30, b: 40 },
               yaxis: { title: { text: "kWh/day" } },
+              xaxis: { fixedrange: false },
+              dragmode: "zoom",
               legend: {
                 orientation: "h",
                 y: 1.12,
@@ -216,7 +205,12 @@ export default function Results({ result }: Props) {
               },
               font: { family: "Inter, system-ui, sans-serif" },
             }}
-            config={{ responsive: true, displayModeBar: false }}
+            config={{
+              responsive: true,
+              scrollZoom: true,
+              displayModeBar: "hover",
+              modeBarButtonsToRemove: ["select2d", "lasso2d", "autoScale2d", "toImage"],
+            }}
             className="w-full"
           />
         </div>
